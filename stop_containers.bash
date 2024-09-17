@@ -1,0 +1,1 @@
+docker ps --format "{{.Names}}" | awk 'NR>1 {print $1}' | xargs docker stop

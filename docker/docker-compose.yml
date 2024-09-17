@@ -1,0 +1,31 @@
+version: '3.4'
+
+services:
+  devs_ws:
+    image: devs_ws
+    build:
+      context: ..
+      dockerfile: ./docker/ws.DockerFile
+    environment:
+      DISPLAY:
+      TZ: "Pacific/Auckland"
+      SUDO_ACCESS: "false"
+      PASSWORD_ACCESS: "false"
+      # - NVIDIA_VISIBLE_DEVICES=all
+    ports:
+      - "60001:22"
+    volumes:
+      - "./id_rsa.pub:/pubkey:ro"
+      - ./ws:/ws
+    network_mode: host
+    ipc: host
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    privileged: true
+    devices:
+      - /dev:/dev

@@ -1,0 +1,4 @@
+string player
+bool chaser
+int8 team
+---
