@@ -59,6 +59,10 @@ class TronGame(Node):
         
         self.get_logger().info('scanning for new players')
         
+        # Remove Players if their color_sensor topic is not heard and they are
+        # not listed as eliminated.
+        
+        # Add Players when their the color_sensor topic is heard
         for topic_name, topic_type in topic_names_and_types:
             match = pattern.match(topic_name)
             if match and topic_name not in self.subscribers:
