@@ -43,8 +43,6 @@ RUN sed -E 's/^#(PermitRootLogin )prohibit-password/\1yes/' /etc/ssh/sshd_config
 RUN mkdir /run/sshd
 RUN ssh-keygen -A
 
-ENV build_var=
-
 RUN echo -e "${WS_PSWD}\n${WS_PSWD}" | passwd
 
 RUN mv /lib/systemd/system/ssh.service /etc/systemd/system/sshd.service
