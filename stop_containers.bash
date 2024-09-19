@@ -1,1 +1,1 @@
-docker ps --format "{{.Names}}" | awk 'NR>1 {print $1}' | xargs docker stop
+docker ps --format "{{.Names}}" | awk 'NR>0 {print $1}' | xargs docker stop

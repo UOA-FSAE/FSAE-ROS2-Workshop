@@ -6,6 +6,7 @@ from std_srvs.srv import Empty
 from turtlesim.srv import Kill, SetPen, Spawn
 from turtle_tron_interfaces.srv import SetTeamColor, Respawn
 import re
+import random
 from typing import List, Dict
 
 
@@ -40,6 +41,8 @@ class TronGame(Node):
         self.eliminated_players: List[str] = []
         self.team_colors: Dict[int, PenColor] = {}
         
+        self.start_srv = self.create_service(Empty, '/tron_game/start', self.start_game_callback)
+        self.assign_teams_srv = self.create_service(Empty, '/tron_game/assign_teams', self.assign_teams_callback)
         self.set_team_color_srv = self.create_service(SetTeamColor, '/tron_game/set_team_color', self.set_team_color_callback)
         self.respawn_srv = self.create_service(Respawn, '/tron_game/respawn', self.respawn_callback)
         self.respawn_all_srv = self.create_service(Empty, '/tron_game/respawn_all', self.respawn_all_callback)
@@ -100,7 +103,44 @@ class TronGame(Node):
                 self.game_log_pub.publish(log_msg)
                 self.get_logger().info(log_msg.data)
                 self.call_kill_service(player_name)
+    
+    def start_game_callback(self, request, response):
+        for player in self.players:
+            player_details = self.player_details.get(player)
+            team = player_details.team
+            color = self.team_colors[team]
+            off = not player_details.is_chaser
+            self.call_set_pen_service(player, color.r, color.g, color.b, color.width, off)
+        
+        return response
+        
+    def assign_teams_callback(self, request, response):        
+        player_count = len(self.players)
+        
+        chaser_count = round((player_count/4)/2)
 
+        chasers = []
+        chasers.append(random.choices([i for i in range(0,player_count) if i%2 == 0], k=chaser_count))
+        chasers.append(random.choices([i for i in range(0,player_count) if i%2 == 1], k=chaser_count))
+
+        for i, player in enumerate(self.players):
+            # TODO make the number of teams dynamic
+            team = i%2
+            self.player_details[player].team = team
+            
+            log_msg = StringMsg()
+            if i in chasers[team]:
+                log_msg.data = f'Player {player} has been added to team {team} as a chaser'
+                self.player_details[player].is_chaser = True
+            else:
+                log_msg.data = f'Player {player} has been added to team {team} as a runner'
+                self.player_details[player].is_chaser = True
+            
+            self.game_log_pub.publish(log_msg)
+            self.get_logger().info(log_msg.data)
+        
+        return response
+        
     def call_kill_service(self, player_name):
         while not self.kill_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Service /kill not available, waiting again...')

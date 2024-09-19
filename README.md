@@ -18,6 +18,8 @@ for attendees to access through ssh.
 
 
 # Workshop Instructions
+
+## Setup (before workshop)
 1. Sort out a networking solution
    * If multiple machines are being used as host ensure they are on the same
      local network. 
@@ -44,19 +46,84 @@ for attendees to access through ssh.
    * (Optional) Define the password used to access the host container(s) over ssh using `export HOST_PSWD=<write_password>` in Linux or `set HOST_PSWD=<write_password>` 
    * (Optional) To view this password against use `echo $WS_PSWD` in linux or `echo %WS_PSWD%` in windows.
 
-5. Set up the docker environments (on each host machine) by running
+4. Build the docker images
+   * Run `docker build --build-arg WS_PSWD=fsaedevs --build-arg ROS_DOMAIN_ID=24 -t devs_ws:copy_fs -f docker/ws.DockerFile .`
+   * Run `docker build --build-arg WS_PSWD=fsaehost47 --build-arg ROS_DOMAIN_ID=24 -t devs_ws:host -f docker/ws_host.DockerFile .`
+
+5. Build packages
+   * `colcon build --symlink-install --packages-select turtle_tron turtle_tron_interfaces --cmake-args -DPYTHON_EXECUTABLE=/usr/bin/python3.8`
+
+6. Set up the docker environments (on each host machine) by running
    `./start_container.bash <NUMBER_OF_CONTAINERS>`. 
    * Each container has port forwarded to it's ssh service begining from 60000.
    * The ssh password to each container is `WS_PSWD` set previously.
    * The `root` user is fine for attendees to use. This gives them
      sudo-privileges.
 
-6. Distribute the host machine's IP(s) and forwarded ssh ports to each attendee.
+7. Distribute the host machine's IP(s) and forwarded ssh ports to each attendee.
    * ssh commands are as followed `ssh root@<host_ip> -p <ssh_port>`
    * distribute the password
 
-7. asd
-8. 
+8. open 2 docker exec instances
+
+9. launch the turtlesim node
+   * run `ros2 run turtlesim turtlesim_node --ros-args -p background_r:=255 -p background_g:=255 -p background_b:=255`
+   <!-- * to launch a second terminal use the ros-args flag `-r __node:=turtlesim2` -->
+10. launch rqt introspection plugin 
 
 
-when stopped the workspace is **not removed** in case a user wants to resume.
+## Demonstration (during workshop)
+
+Spawn a turtle from off-screan
+`ros2 service call /spawn turtlesim/srv/Spawn "{x: 2, y: 2, theta: 0.2, name: '$TURTLE_NAME'}"`
+
+1. start Tron
+2. start a new sim
+`ros2 run turtlesim turtlesim_node --ros-args -r __node:=turtlesim_tron -pbackground_r:=255 -p background_g:=255 -p background_b:=255`
+run tron node
+`ros2 run turtle_tron tron_game`
+set team colors
+`ros2 service call /tron_game/set_team_color turtle_tron_interfaces/srv/SetTeamColor "{team: 0, r: 255, g: 0, b: 0, width: 10}"`
+`ros2 service call /tron_game/set_team_color turtle_tron_interfaces/srv/SetTeamColor "{team: 1, r: 0, g: 255, b: 0, width: 10}"`
+
+assign teams
+`ros2 service call /tron_game/assign_teams std_srvs/srv/Empty`
+
+
+start game
+`ros2 service call /tron_game/start std_srvs/srv/Empty`
+`ros2 service call /tron_game/start std_srvs/srv/Empty`
+
+respawn players
+`ros2 service call /tron_game/respawn_all std_srvs/srv/Empty`
+
+
+
+
+
+
+
+when ws containers are stopped the container is **not removed** in case a user
+wants to reconnect and resume.
+
+**The host container is automatically removed when stopped.**
+
+
+
+If the readmes are updated, they can be re-exported using the VS Code [Markdown
+PDF](https://marketplace.visualstudio.com/items?itemName=yzane.markdown-pdf) extension
+
+
+If you get the following error you can resolve it by running `ssh-keygen -R
+<HOST-IP>:<PORT>`
+```
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ED25519 key sent by the remote host is
+SHA256:lf5fZ9te8RkNRDkVZJMN0ubXc3+CxitpHzI3bdwHWlM.
+Please contact your system administrator.
+```

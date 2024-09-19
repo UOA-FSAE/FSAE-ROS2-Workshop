@@ -1,5 +1,14 @@
+# Activity 1 - interacting with the Turtlesim
+Learning to use the ROS 2 CLI 
 
-export TurtleId=3
+## Instructions
+to set your own TURTLE_NAME use the following command. Otherwise you have been
+given a unique TURTLE_NAME co-responding to your container
+```bash
+export TURTLE_NAME=3
+```
+
+For the purpose of this  
 
 Show all services
 ```bash
@@ -36,13 +45,13 @@ string name
 
 Step X: call the spawn service in YAML syntax
 ```bash
-ros2 service call /spawn turtlesim/srv/Spawn "{x: 2, y: 2, theta: 0.2, name: 'turtle$TurtleId'}"
+ros2 service call /spawn turtlesim/srv/Spawn "{x: 2, y: 2, theta: 0.2, name: '$TURTLE_NAME'}"
 ```
 
 
 Step X: start a teleop process
 ```bash
-ros2 run turtlesim turtle_teleop_key --ros-args --remap turtle$turtle_id/cmd_vel:=turtle$turtle_id/cmd_vel
+ros2 run turtlesim turtle_teleop_key --ros-args --remap turtle1/cmd_vel:=$TURTLE_NAME/cmd_vel
 ```
 
 Follow the prompts in your terminal to control your turtle up on the screen.
